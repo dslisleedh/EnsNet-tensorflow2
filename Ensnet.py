@@ -2,27 +2,49 @@ import tensorflow as tf
 from layers import *
 
 class Cnn(tf.keras.layers.Layer):
-    def __init__(self):
+    def __init__(self, dataset):
         super(Cnn, self).__init__()
+        self.dataset = dataset
 
         self.Conv = tf.keras.Sequential([
             Conv(filters=64,
-                 padding='valid'
+                 padding='valid',
+                 dropout_rate=.25 if self.dataset == 'cifar10' else .35,
                  ),
-            Conv(filters=128),
+            Conv(filters=128,
+                 dropout_rate=.25 if self.dataset == 'cifar10' else .35
+                 ),
             Conv(filters=256,
                  padding='valid',
-                 pool=True
+                 pool=True,
+                 dropout_rate=.25 if self.dataset == 'cifar10' else .35
                  ),
             Conv(filters=512,
-                 padding='valid'
-                 ),
-            Conv(filters=1024),
-            Conv(filters=2000,
                  padding='valid',
-                 pool=True
+                 dropout_rate=.25 if self.dataset == 'cifar10' else .35
+                 ),
+            Conv(filters=1024,
+                 dropout_rate=.25 if self.dataset == 'cifar10' else .35
+                 ),
+            Conv(filters=2048 if self.dataset == 'cifar10' else 2000,
+                 padding='valid',
+                 pool=True,
+                 dropout_rate=.25 if self.dataset == 'cifar10' else .35
                  )
         ])
+        if self.dataset == 'cifar10':
+            self.Conv.add(Conv(filters=3000,
+                               padding='valid'
+                               )
+                          )
+            self.Conv.add(Conv(filters=3500,
+                               padding='valid'
+                               )
+                          )
+            self.Conv.add(Conv(filters=4000,
+                               padding='valid'
+                               )
+                          )
 
     def call(self, X):
         y = self.Conv(X)
@@ -56,12 +78,13 @@ class Subnetwork(tf.keras.layers.Layer):
         return self.classifier(X)
 
 class Subnetworks(tf.keras.layers.Layer):
-    def __init__(self, n_labels):
+    def __init__(self, n_labels, dataset):
         super(Subnetworks, self).__init__()
         self.n_labels = n_labels
+        self.dataset = dataset
 
         self.subnetworks = [Subnetwork(n_nodes=512,
-                                       drop_rate=.5,
+                                       drop_rate=.3 if self.dataset == 'cifar10' else .5,
                                        n_labels=self.n_labels
                                        ) for _ in range(10)
                             ]
@@ -75,28 +98,24 @@ class Subnetworks(tf.keras.layers.Layer):
 
 
 class Ensnet(tf.keras.models.Model):
-    def __init__(self, n_labels):
+    def __init__(self, n_labels, dataset = 'mnist'):
         super(Ensnet, self).__init__()
         self.n_labels = n_labels
+        if dataset not in ['mnist','fashion_mnist','cifar10']:
+            raise ValueError('Unsupported dataset')
+        else:
+            self.dataset = dataset
 
         self.augumentation = tf.keras.layers.experimental.preprocessing.RandomRotation(factor=.025)
-        self.cnn = Cnn()
+        self.cnn = Cnn(self.dataset)
         self.cnn_classifier = tf.keras.Sequential([
             tf.keras.layers.GlobalAvgPool2D(),
-            tf.keras.layers.Dense(512,
-                                  activation='relu',
-                                  ),
-            tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.Dropout(.5),
-            Dropconnectdense(units=512,
-                             activation='relu',
-                             prob=.5
-                             ),
-            tf.keras.layers.Dense(10,
-                                  activation='softmax'
-                                  )
+            Subnetwork(n_nodes = 512,
+                       drop_rate = .3 if self.dataset == 'cifar10' else .5,
+                       n_labels = self.n_labels
+                       )
         ])
-        self.subnets = Subnetworks(self.n_labels)
+        self.subnets = Subnetworks(self.n_labels, self.dataset)
 
     def compile(self, loss_fn, optimizer, metrics):
         super(Ensnet, self).compile()

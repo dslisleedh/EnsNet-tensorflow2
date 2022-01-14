@@ -5,7 +5,7 @@ class Conv(tf.keras.layers.Layer):
                  padding = 'same',
                  strides = (1,1),
                  activation = 'relu',
-                 dropout_rate = .35,
+                 dropout_rate = .25,
                  pool = False
                  ):
         super(Conv, self).__init__()
