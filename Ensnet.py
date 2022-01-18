@@ -130,10 +130,11 @@ class Ensnet(tf.keras.models.Model):
         return y[tf.argmax(count)]
 
     @tf.function
-    def train_step(self, Input):
-        X, y = Input
+    def train_step(self, data):
+        X, y = data
         X = self.augumentation(X)
 
+        # 1. Update CNN
         with tf.GradientTape() as tape:
             features = self.cnn(X)
             preds_cnn = self.cnn_classifier(features)
@@ -143,6 +144,7 @@ class Ensnet(tf.keras.models.Model):
             zip(grads, self.cnn.trainable_variables + self.cnn_classifier.trainable_variables)
         )
 
+        # 2. Update subnetworks
         with tf.GradientTape() as tape:
             features = self.cnn(X)
             preds_subs = self.subnets(features)
@@ -157,7 +159,7 @@ class Ensnet(tf.keras.models.Model):
                           axis=-1)
         preds = tf.map_fn(fn=self.get_mode, elems=preds)
         m = self.cm(y, preds)
-        return {'mean loss': loss_c + sum(loss_s) / 11, f'{self.cm.name}': m}
+        return {'mean loss': (loss_c + sum(loss_s)) / 11, f'{self.cm.name}': m}
 
     @tf.function
     def test_step(self, Input):
