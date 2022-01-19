@@ -135,7 +135,7 @@ class Ensnet(tf.keras.models.Model):
     @tf.function
     def train_step(self, data):
         X, y = data
-        X = self.augumentation(X)
+        X = self.augumentation(X, training = True)
 
         # 1. Update CNN
         with tf.GradientTape() as tape:
