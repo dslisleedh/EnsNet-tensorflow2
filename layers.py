@@ -33,13 +33,15 @@ class Conv(tf.keras.layers.Layer):
                        )
         self.C.add(tf.keras.layers.Dropout(self.dropout_rate))
 
-    def call(self, X):
-        return self.C(X)
+    def call(self, inputs, **kwargs):
+        return self.C(inputs)
 
 class Dropconnectdense(tf.keras.layers.Dense):
     def __init__(self, *args, **kwargs):
         self.prob = kwargs.pop('prob', 0.5)
         super(Dropconnectdense, self).__init__(*args, **kwargs)
+
+        self.dropout = tf.keras.layers.Dropout(self.prob)
 
     def build(self, input_shape):
         self.kernel = self.add_weight('kernel',
@@ -53,7 +55,7 @@ class Dropconnectdense(tf.keras.layers.Dense):
                                         )
 
     def call(self, X):
-        y = tf.matmul(X, tf.nn.dropout(self.kernel, self.prob))
+        y = tf.matmul(X, self.dropout(self.kernel))
         if self.use_bias:
-            y = y + tf.nn.dropout(self.bias, self.prob)
+            y = y + self.dropout(self.bias)
         return self.activation(y)

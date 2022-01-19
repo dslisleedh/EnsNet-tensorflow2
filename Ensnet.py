@@ -46,8 +46,8 @@ class Cnn(tf.keras.layers.Layer):
                                )
                           )
 
-    def call(self, X):
-        y = self.Conv(X)
+    def call(self, inputs, **kwargs):
+        y = self.Conv(inputs)
         return y
 
 
@@ -74,8 +74,8 @@ class Subnetwork(tf.keras.layers.Layer):
                                   )
         ])
 
-    def call(self, X):
-        return self.classifier(X)
+    def call(self, inputs, **kwargs):
+        return self.classifier(inputs)
 
 class Subnetworks(tf.keras.layers.Layer):
     def __init__(self, n_labels, dataset):
@@ -89,11 +89,11 @@ class Subnetworks(tf.keras.layers.Layer):
                                        ) for _ in range(10)
                             ]
 
-    def call(self, X):
-        X = tf.split(X,
+    def call(self, inputs, **kwargs):
+        features = tf.split(inputs,
                      num_or_size_splits = 10,
                      axis = -1)
-        y = [subnet(divition) for divition, subnet in zip(X, self.subnetworks)]
+        y = [subnet(divition) for divition, subnet in zip(features, self.subnetworks)]
         return y
 
 
@@ -106,7 +106,11 @@ class Ensnet(tf.keras.models.Model):
         else:
             self.dataset = dataset
 
-        self.augumentation = tf.keras.layers.experimental.preprocessing.RandomRotation(factor=.025)
+        self.augumentation = tf.keras.Sequential([
+            tf.keras.layers.experimental.preprocessing.Resizing(height=30, width=30),
+            tf.keras.layers.experimental.preprocessing.RandomCrop(height=28, width=28),
+            tf.keras.layers.experimental.preprocessing.RandomRotation(factor=.015)
+        ])
         self.cnn = Cnn(self.dataset)
         self.cnn_classifier = tf.keras.Sequential([
             tf.keras.layers.GlobalAvgPool2D(),
