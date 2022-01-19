@@ -66,7 +66,6 @@ class Subnetwork(tf.keras.layers.Layer):
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.Dropout(self.drop_rate),
             Dropconnectdense(units=self.n_nodes,
-                             activation='relu',
                              prob=self.drop_rate
                              ),
             tf.keras.layers.Dense(self.n_labels,
@@ -93,7 +92,7 @@ class Subnetworks(tf.keras.layers.Layer):
         features = tf.split(inputs,
                      num_or_size_splits = 10,
                      axis = -1)
-        y = [subnet(divition) for divition, subnet in zip(features, self.subnetworks)]
+        y = [subnet(divition, **kwargs) for divition, subnet in zip(features, self.subnetworks)]
         return y
 
 
@@ -140,8 +139,8 @@ class Ensnet(tf.keras.models.Model):
 
         # 1. Update CNN
         with tf.GradientTape() as tape:
-            features = self.cnn(X)
-            preds_cnn = self.cnn_classifier(features)
+            features = self.cnn(X, training=True)
+            preds_cnn = self.cnn_classifier(features, training=True)
             loss_c = self.loss_fn(y, preds_cnn)
         grads = tape.gradient(loss_c, self.cnn.trainable_variables + self.cnn_classifier.trainable_variables)
         self.cnn_optimizer.apply_gradients(
@@ -150,8 +149,8 @@ class Ensnet(tf.keras.models.Model):
 
         # 2. Update subnetworks
         with tf.GradientTape() as tape:
-            features = self.cnn(X)
-            preds_subs = self.subnets(features)
+            features = self.cnn(X, training=False)
+            preds_subs = self.subnets(features, training=True)
             loss_s = []
             for y_hat_ in preds_subs:
                 loss_s.append(self.loss_fn(y, y_hat_))
@@ -163,27 +162,27 @@ class Ensnet(tf.keras.models.Model):
                           axis=-1)
         preds = tf.map_fn(fn=self.get_mode, elems=preds)
         m = self.cm(y, preds)
-        return {'mean loss': (loss_c + sum(loss_s)) / 11, f'{self.cm.name}': m}
+        return {'mean_loss': (loss_c + sum(loss_s)) / 11, f'{self.cm.name}': m}
 
     @tf.function
     def test_step(self, Input):
         X, y = Input
-        features = self.cnn(X)
-        preds = self.subnets(features)
-        preds.append(self.cnn_classifier(features))
+        features = self.cnn(X, training=False)
+        preds = self.subnets(features, training=False)
+        preds.append(self.cnn_classifier(features, training=False))
         loss = []
         for y_hat_ in preds:
             loss.append(self.loss_fn(y, y_hat_))
         preds = tf.argmax(tf.stack(preds, axis=1), -1)
         preds = tf.map_fn(fn=self.get_mode, elems=preds)
         m = self.cm(y, preds)
-        return {'mean loss': sum(loss) / len(loss), f'{self.cm.name}': m}
+        return {'mean_loss': sum(loss) / len(loss), f'{self.cm.name}': m}
 
     @tf.function
     def call(self, X):
-        features = self.cnn(X)
-        preds = self.subnets(features)
-        preds.append(self.cnn_classifier(features))
+        features = self.cnn(X, training = False)
+        preds = self.subnets(features, training = False)
+        preds.append(self.cnn_classifier(features, training = False))
         preds = tf.argmax(tf.stack(preds, axis=1), -1)
         preds = tf.map_fn(fn=self.get_mode, elems=preds)
         return preds
