@@ -15,5 +15,5 @@ You can run train code by `train.py`
 
     conda env create -f environment.yaml
     conda activate ensnet
-    python .\train.py -dataset=mnist # [mnist, fashion_mnist, cifar10] Or you can use --multirun. Check hydra
+    python .\train.py dataset=mnist # [mnist, fashion_mnist, cifar10] Or you can use --multirun. Check hydra
     
