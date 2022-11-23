@@ -2,16 +2,18 @@
 
 ![model](https://github.com/dslisleedh/EnsNet-tensorflow2/blob/main/model.JPG)
 
-### 요약  
+## NOTE !!! 
+Reworked at 20221123  
+Current Training state is SO UNSTABLE.  
+I'll fix it later. Please add issues or PR if you find any problems.  
+Thank you.  
 
-CNN의 Output과 Featuremap을 10개로 쪼개서 예측한 10개의 output, 총 11개의 output을 voting하는 ensemble CNN
+## How to run
 
-### 학습방식  
+You can run train code by `train.py`  
 
-1. Update CNN  
 
-Label로 CNN의 classifier를 학습함.
-
-2. Update subnetworks  
-
-CNN의 variables를 동결한 후 subnetworks만 학습함
+    conda env create -f environment.yaml
+    conda activate ensnet
+    python .\train.py -dataset=mnist # [mnist, fashion_mnist, cifar10] Or you can use --multirun. Check hydra
+    
