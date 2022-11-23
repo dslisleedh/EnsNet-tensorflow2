@@ -68,10 +68,9 @@ def main(main_config):
             get_original_cwd() + f'/configs/others.gin'
         ]
         gin.parse_config_files_and_bindings(config_files, None)
-        subconfig_save = gin.operative_config_str()
         # Main config automatically saved by hydra
         with open(f'./sub_configs.gin', 'w') as f:
-            f.write(subconfig_save)
+            f.write(gin.config_str())
 
         train_kwargs = load_train_config()
         train(**train_kwargs)
