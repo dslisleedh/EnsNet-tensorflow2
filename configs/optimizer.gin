@@ -1,0 +1,6 @@
+train_config.optimizer = @optimizer/tf.keras.optimizers.Adam()
+
+optimizer/tf.keras.optimizers.Adam.learning_rate = 0.001
+optimizer/tf.keras.optimizers.Adam.beta_1 = 0.9
+optimizer/tf.keras.optimizers.Adam.beta_2 = 0.999
+optimizer/tf.keras.optimizers.Adam.epsilon = 1e-08

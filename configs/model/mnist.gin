@@ -1,0 +1,21 @@
+train_config.model = @model/EnsNet()
+
+model/EnsNet.config = {
+    'block_config': [
+        {
+            'n_filters': [64, 128, 256],
+            'drop_rate': 0.35,
+            'down_sample': True,
+            'drop_after': False
+        }, {
+            'n_filters': [512, 1024, 2000],
+            'drop_rate': 0.35,
+            'down_sample': True,
+            'drop_after': True
+        }
+    ],
+    'classifier_config': {
+        'n_classes': 10,
+        'drop_rate': 0.5
+    }
+}

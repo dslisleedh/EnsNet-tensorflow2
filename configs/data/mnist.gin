@@ -1,0 +1,7 @@
+train_config.datasets = @load_mnist_dataset()
+
+train_config.preprocessing_layer = @return_augmentation_layer()
+return_augmentation_layer.rotation_range = (-0.014, 0.014) # Almost 5 degrees
+return_augmentation_layer.scale_range = ((-0.1, 0.1), (-0.1, 0.1))
+return_augmentation_layer.translation_range = ((-0.04, 0.04), (-0.04, 0.04))
+return_augmentation_layer.shear_range = (0.019, 0.019)

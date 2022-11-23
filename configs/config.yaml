@@ -1,0 +1,16 @@
+defaults:
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
+
+dataset: mnist
+
+log_prefix: ./logs/${dataset}/
+hydra:
+  run:
+    dir: ${log_prefix}/${now:%Y-%m-%d}_${now:%H-%M-%S}
+  sweep:
+    dir: ${log_prefix}/${now:%Y-%m-%d}_${now:%H-%M-%S}
+    subdir: ''
+
+  job:
+    chdir: True

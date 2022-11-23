@@ -1,0 +1,11 @@
+train_config.loss = @loss/tf.keras.losses.SparseCategoricalCrossentropy()
+
+train_config.metrics = @metrics/list_wrapper()
+metrics/list_wrapper.metrics1 = @tf.keras.metrics.SparseCategoricalAccuracy()
+metrics/list_wrapper.metrics2 = @metrics2/SparseF1Score()
+metrics2/SparseF1Score.num_classes = 10
+metrics2/SparseF1Score.average = "macro"
+
+train_config.patience = 5
+train_config.epochs = 100
+train_config.batch_size = 512
