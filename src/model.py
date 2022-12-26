@@ -1,6 +1,8 @@
-import gin
 import tensorflow as tf
 from src.layers import *
+
+import gin
+from copy import deepcopy
 
 
 @gin.configurable
@@ -21,7 +23,7 @@ class EnsNet(tf.keras.models.Model):
     def compile(self, *args, **kwargs):
         super(EnsNet, self).compile(*args, **kwargs)
         self.sub_optimizer = [
-            kwargs.get('optimizer') for _ in range(10)
+            deepcopy(kwargs.get('optimizer')) for _ in range(10)
         ]
 
     @tf.function
